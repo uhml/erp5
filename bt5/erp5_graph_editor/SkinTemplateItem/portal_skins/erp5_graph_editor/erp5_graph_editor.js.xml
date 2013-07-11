@@ -1,0 +1,259 @@
+<?xml version="1.0"?>
+<ZopeData>
+  <record id="1" aka="AAAAAAAAAAE=">
+    <pickle>
+      <global name="File" module="OFS.Image"/>
+    </pickle>
+    <pickle>
+      <dictionary>
+        <item>
+            <key> <string>_Access_contents_information_Permission</string> </key>
+            <value>
+              <list>
+                <string>Manager</string>
+              </list>
+            </value>
+        </item>
+        <item>
+            <key> <string>_Change_cache_settings_Permission</string> </key>
+            <value>
+              <list>
+                <string>Manager</string>
+              </list>
+            </value>
+        </item>
+        <item>
+            <key> <string>_Change_permissions_Permission</string> </key>
+            <value>
+              <list>
+                <string>Manager</string>
+              </list>
+            </value>
+        </item>
+        <item>
+            <key> <string>_Copy_or_Move_Permission</string> </key>
+            <value>
+              <list>
+                <string>Manager</string>
+              </list>
+            </value>
+        </item>
+        <item>
+            <key> <string>_Delete_objects_Permission</string> </key>
+            <value>
+              <list>
+                <string>Manager</string>
+              </list>
+            </value>
+        </item>
+        <item>
+            <key> <string>_EtagSupport__etag</string> </key>
+            <value> <string>ts73556794.58</string> </value>
+        </item>
+        <item>
+            <key> <string>_FTP_access_Permission</string> </key>
+            <value>
+              <list>
+                <string>Manager</string>
+              </list>
+            </value>
+        </item>
+        <item>
+            <key> <string>_Manage_WebDAV_Locks_Permission</string> </key>
+            <value>
+              <list>
+                <string>Manager</string>
+              </list>
+            </value>
+        </item>
+        <item>
+            <key> <string>_Manage_properties_Permission</string> </key>
+            <value>
+              <list>
+                <string>Manager</string>
+              </list>
+            </value>
+        </item>
+        <item>
+            <key> <string>_Take_ownership_Permission</string> </key>
+            <value>
+              <list>
+                <string>Manager</string>
+              </list>
+            </value>
+        </item>
+        <item>
+            <key> <string>_Undo_changes_Permission</string> </key>
+            <value>
+              <list>
+                <string>Manager</string>
+              </list>
+            </value>
+        </item>
+        <item>
+            <key> <string>_View_Permission</string> </key>
+            <value>
+              <list>
+                <string>Manager</string>
+              </list>
+            </value>
+        </item>
+        <item>
+            <key> <string>_View_management_screens_Permission</string> </key>
+            <value>
+              <list>
+                <string>Manager</string>
+              </list>
+            </value>
+        </item>
+        <item>
+            <key> <string>_WebDAV_Lock_items_Permission</string> </key>
+            <value>
+              <list>
+                <string>Manager</string>
+              </list>
+            </value>
+        </item>
+        <item>
+            <key> <string>_WebDAV_Unlock_items_Permission</string> </key>
+            <value>
+              <list>
+                <string>Manager</string>
+              </list>
+            </value>
+        </item>
+        <item>
+            <key> <string>_WebDAV_access_Permission</string> </key>
+            <value>
+              <list>
+                <string>Manager</string>
+              </list>
+            </value>
+        </item>
+        <item>
+            <key> <string>__name__</string> </key>
+            <value> <string>erp5_graph_editor.js</string> </value>
+        </item>
+        <item>
+            <key> <string>content_type</string> </key>
+            <value> <string>application/javascript</string> </value>
+        </item>
+        <item>
+            <key> <string>data</string> </key>
+            <value> <string encoding="cdata"><![CDATA[
+
+(function($) {\n
+  "use strict";\n
+\n
+  jsPlumb.bind("ready", function() {\n
+\n
+    jsPlumb.setRenderMode(jsPlumb.SVG);\n
+    jsPlumb.importDefaults({\n
+      Endpoint: [ "Dot", {radius: 2} ],\n
+      ConnectionOverlays : [\n
+        [ "Arrow", { location:1, width:10, } ], \n
+      ],\n
+      Anchor: "Continuous",\n
+    });     \n
+\n
+    \n
+    /**\n
+     * The graph renderer class\n
+     *\n
+     * Initialise a graph by passing a jquery selector for the container\n
+     */\n
+    function GraphRenderer(container) {\n
+      var self = { nodes: {},\n
+                   edges: [],\n
+                   preferences: {},\n
+                   container: container};\n
+\n
+      self.addNode = function(node_id, node_data) {\n
+        // FIXME: id needs a prefix to prevent clashes\n
+        var element = $(\'<div class="graph_node" id="\' + node_id + \'">\').text(node_data[\'name\'] || node_id),\n
+            preference = self.preferences[node_id];\n
+        if (preference) {\n
+          element.css(preference);\n
+        }\n
+        self.container.append(element);\n
+        self.nodes[node_id] = node_data\n
+      };\n
+\n
+      self.addEdge = function(source_node_id, destination_node_id, edge_data) {\n
+        var edge_label = edge_data[\'name\'] || "";\n
+        if ((source_node_id && destination_node_id) && (source_node_id != destination_node_id)) {\n
+          jsPlumb.connect({\n
+            source: source_node_id,\n
+            target: destination_node_id,\n
+            paintStyle: { lineWidth: 1, strokeStyle: "#000", },\n
+            overlays : [["Label", {label: edge_label,}]],\n
+          });\n
+          self.edges.push({ source: source_node_id,\n
+                            destination: destination_node_id,\n
+                            data: edge_data });\n
+        } else {\n
+          console.error("Ignoring invalid edge", source_node_id, destination_node_id, edge_data);\n
+        }\n
+      }\n
+\n
+      self.loadGraph = function(data) {\n
+        /** Load the graph from data, a dictionnary with \'edges\', \'nodes\' and\n
+         * \'preferences\' keys.\n
+         */\n
+        $.each(data.preferences, function(node_id, pref) {\n
+          if (pref) {\n
+            // Positions from are from 0 to 1. Rescale them according to the\n
+            // size of the rendering div\n
+            // XXX 35 is taken from the size of a graph_node\n
+            pref.top = (Math.floor(pref.top*self.container.height()) - 35) + "px";\n
+            pref.left = Math.floor(pref.left*self.container.width()) + "px";\n
+            self.preferences[node_id] = $.extend(self.preferences[node_id] || {}, pref)\n
+          };\n
+        });\n
+        $.each(data.nodes, function(node_id, node) {\n
+          self.addNode(node_id, node);\n
+        });\n
+        $.each(data.edges, function(idx, edge) {\n
+          self.addEdge(edge.source, edge.destination, edge.data);\n
+        });\n
+        // XXX should not be always draggable. Global properties ?\n
+        jsPlumb.draggable(jsPlumb.getSelector(".graph_node"),\n
+          { grid: [20, 20],\n
+            stop: function(element) { }, } );\n
+\n
+      }\n
+    return self;\n
+    }\n
+\n
+\n
+    /** XXX create a graph renderer when there\'s an element with id \'erp5_graph_renderer\' in the page \n
+    */\n
+    var renderer = $("#erp5_graph_renderer");\n
+    if (renderer.length) {\n
+      var graph = GraphRenderer(renderer);\n
+      $.getJSON(\'Base_getJsonGraph\', function(data) {\n
+        graph.loadGraph(data)\n
+      });\n
+    };\n
+  });\n
+})(jQuery);\n
+
+
+]]></string> </value>
+        </item>
+        <item>
+            <key> <string>precondition</string> </key>
+            <value> <string></string> </value>
+        </item>
+        <item>
+            <key> <string>size</string> </key>
+            <value> <int>3321</int> </value>
+        </item>
+        <item>
+            <key> <string>title</string> </key>
+            <value> <string></string> </value>
+        </item>
+      </dictionary>
+    </pickle>
+  </record>
+</ZopeData>
