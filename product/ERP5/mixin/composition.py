@@ -55,7 +55,7 @@ def _getEffectiveModel(self, start_date, stop_date):
 
   query_list = [Query(reference=reference),
                 Query(portal_type=self.getPortalType()),
-                Query(validation_state=('deleted', 'invalidated'),
+                Query(validation_state=('deleted', 'draft'),
                       operator='NOT')]
   if start_date is not None:
     query_list.append(ComplexQuery(Query(effective_date=None),
@@ -69,14 +69,18 @@ def _getEffectiveModel(self, start_date, stop_date):
                                    logical_operator='OR'))
 
   # XXX What to do the catalog returns nothing (either because 'self' was just
-  #     created and not yet indexed, or because it was invalidated) ?
+  #     created and not yet indexed, or because it was invalidated/archived) ?
   #     For the moment, we return self if self is invalidated and we raise otherwise.
   #     This way, if this happens in activity it may succeed when activity is retried.
-  model_list = self.getPortalObject().portal_catalog.unrestrictedSearchResults(
-      query=ComplexQuery(logical_operator='AND', *query_list),
-      sort_on=(('version', 'descending'),))
+  model_list = sorted(self.getPortalObject().portal_catalog.unrestrictedSearchResults(
+      query=ComplexQuery(logical_operator='AND', *query_list)),
+      key=lambda model: (
+        model.getValidationState() == 'archived', # We give priority to explicit archived state
+        model.getVersion(), # Sort by version, as text XXX we need to improve this
+        model.getModificationDate()), # Lastly by modification date
+      reverse=True)
   if not model_list:
-    if self.getValidationState() == 'invalidated':
+    if self.getValidationState() in ('invalidated', 'archived'):
        return self
     raise KeyError('No %s found with the reference %s between %s and %s' % \
             (self.getPortalType(), reference, start_date, stop_date))
