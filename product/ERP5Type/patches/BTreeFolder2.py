@@ -49,25 +49,6 @@ def _cleanup(self):
             if not self._tree.has_key(key):
                 raise AssertionError(
                     "Missing value for key: %s" % repr(key))
-        check(self._mt_index)
-        for key, object in self._tree.items():
-            meta_type = getattr(object, 'meta_type', None)
-            if meta_type is not None:
-              if not self._mt_index.has_key(meta_type):
-                  raise AssertionError(
-                      "Missing meta_type index for key: %s" % repr(key))
-        for key, value in self._mt_index.items():
-            if (not self._mt_index.has_key(key)
-                or self._mt_index[key] is not value):
-                raise AssertionError(
-                    "Missing or incorrect meta_type index: %s"
-                    % repr(key))
-            check(value)
-            for k in value.keys():
-                if not value.has_key(k) or not self._tree.has_key(k):
-                    raise AssertionError(
-                        "Missing values for meta_type index: %s"
-                        % repr(key))
         return 1
     except (AssertionError, KeyError):
         LOG('BTreeFolder2', WARNING,
@@ -75,18 +56,6 @@ def _cleanup(self):
             error=sys.exc_info())
         try:
             self._tree = OOBTree(self._tree)
-            mt_index = OOBTree()
-            for id, object in self._tree.items():
-              # Update the meta type index.
-              meta_type = getattr(object, 'meta_type', None)
-              if meta_type is not None:
-                  ids = mt_index.get(meta_type, None)
-                  if ids is None:
-                      ids = OIBTree()
-                      mt_index[meta_type] = ids
-                  ids[id] = 1
-            #LOG('Added All Object in BTree mti',0, map(lambda x:str(x), mt_index.keys()))
-            self._mt_index = OOBTree(mt_index)
         except:
             LOG('BTreeFolder2', ERROR, 'Failed to fix %s.' % path,
                 error=sys.exc_info())
