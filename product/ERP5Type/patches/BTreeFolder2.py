@@ -14,57 +14,13 @@
 ##############################################################################
 
 # Stribger repair of BTreeFolder2
-import sys
 from Products.BTreeFolder2.BTreeFolder2 import BTreeFolder2Base
-from Acquisition import aq_base
-from BTrees.OOBTree import OOBTree
-from BTrees.OIBTree import OIBTree, union
-from BTrees.Length import Length
-from OFS.ObjectManager import BadRequestException, BeforeDeleteException
-from Products.ZCatalog.Lazy import LazyMap
-from zLOG import LOG, WARNING, ERROR, INFO
 
 class ERP5BTreeFolder2Base(BTreeFolder2Base):
   """
     This class is only for backward compatibility.
   """
   pass
-
-def _cleanup(self):
-    """Cleans up errors in the BTrees.
-
-    Certain ZODB bugs have caused BTrees to become slightly insane.
-    Fortunately, there is a way to clean up damaged BTrees that
-    always seems to work: make a new BTree containing the items()
-    of the old one.
-
-    Returns 1 if no damage was detected, or 0 if damage was
-    detected and fixed.
-    """
-    from BTrees.check import check
-    path = '/'.join(self.getPhysicalPath())
-    try:
-        check(self._tree)
-        for key in self._tree.keys():
-            if not self._tree.has_key(key):
-                raise AssertionError(
-                    "Missing value for key: %s" % repr(key))
-        return 1
-    except (AssertionError, KeyError):
-        LOG('BTreeFolder2', WARNING,
-            'Detected damage to %s. Fixing now.' % path,
-            error=sys.exc_info())
-        try:
-            self._tree = OOBTree(self._tree)
-        except:
-            LOG('BTreeFolder2', ERROR, 'Failed to fix %s.' % path,
-                error=sys.exc_info())
-            raise
-        else:
-            LOG('BTreeFolder2', INFO, 'Fixed %s.' % path)
-        return 0
-
-BTreeFolder2Base._cleanup = _cleanup
 
 # Work around for the performance regression introduced in Zope 2.12.23.
 # Otherwise, we use superclass' __contains__ implementation, which uses
